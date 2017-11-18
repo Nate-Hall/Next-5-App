@@ -1,0 +1,29 @@
+body {
+	background-color: #F6F6F6
+}
+
+
+#Container {
+	width: 80%;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	font-size: 150%;
+}
+
+#Content {
+	width: 100%;
+	clear: both;
+}
+
+.Info {
+	float: left;
+	border: 1px solid black;
+	border-radius: 30px;
+	width: 10%;
+	padding: 10% 2%;
+}
+
+#Names {
+	width: 30%;
+}
