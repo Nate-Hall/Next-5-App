@@ -8,10 +8,11 @@
 <body>
 	<?php
 
-		$DEBUG = true;
+		$DEBUG = false;
 
 		echo "1. Get all Event Types....\n";
 		$allEventTypes = GetEventTypes("4i5aIrwSTbg9Fo3h", "WcMwN+CwkZNTOF44gyjMhxVfvXs0caMM30jPE6PQIi8=");
+		echo json_encode($allEventTypes);
 
 		function GetEventTypes($appKey, $sessionToken) {
 			$jsonResponse = CallAPI($appKey, $sessionToken, 'listEventTypes', '{"filter":{}}');
@@ -20,29 +21,36 @@
 		}
 
 		function CallAPI($appKey, $sessionToken, $operation, $params) {
-		    $curl = curl_init();
+		    $ch = curl_init();
 
-		    curl_setopt($curl, CURLOPT_URL, "https://api.betfair.com/exchange/betting/rest/v1/$operation/");
-		    curl_setopt($curl, CURLOPT_POST, 1);
-		    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		    curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+		    curl_setopt($ch, CURLOPT_URL, "https://api.betfair.com/exchange/betting/rest/v1/listEventTypes/");
+		    curl_setopt($ch, CURLOPT_POST, 1);
+		    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
+		    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER,false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,false);
+		    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
 		        'X-Application: ' . $appKey,
 		        'X-Authentication: ' . $sessionToken,
 		        'Accept: application/json',
 		        'Content-Type: application/json'
 		    ));
 
-		    curl_setopt($curl, CURLOPT_POSTFIELDS, $params);
+		    curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+
 		    debug('Post Data: ' . $params);
-		    $response = json_decode(curl_exec($curl));
+		    $response = json_decode(curl_exec($ch));
 		    debug('Response: ' . json_encode($response));
-		    $http_status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-		    curl_close($curl);
+
+		    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		    curl_close($ch);
+
 		    if ($http_status == 200) {
 		        return $response;
 		    } else {
 		        echo 'Call to api-ng failed: ' . "\n";
-		        echo  'Response: ' . json_encode($response);
+		        echo  'Response: ' . json_encode($response) . "\n";
+		        echo 'HTTP CODE: ' . $http_status;
 		        exit(-1);
 		    }
 		}
