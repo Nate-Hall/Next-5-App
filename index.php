@@ -6,7 +6,12 @@
 	<link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
 	<?php
+		require_once('APIFunctions.php');
+
+		session_start();
 
 		$DEBUG = false;
 
@@ -49,126 +54,6 @@
 				}
 			}
 		}
-
-
-		//$orderedEvents = array_multisort($name, SORT_ASC, $orderedEvents);
-
-		function FormatTime($rawTime) {
-			return date("d M Y H:i:s", strtotime($rawTime));
-		}
-
-		function ArraySort($array, $on, $order=SORT_ASC){
-
-		    $new_array = array();
-		    $sortable_array = array();
-
-		    if (count($array) > 0) {
-		        foreach ($array as $k => $v) {
-		            if (is_array($v)) {
-		                foreach ($v as $k2 => $v2) {
-		                    if ($k2 == $on) {
-		                        $sortable_array[$k] = $v2;
-		                    }
-		                }
-		            } else {
-		                $sortable_array[$k] = $v;
-		            }
-		        }
-
-		        switch ($order) {
-		            case SORT_ASC:
-		                asort($sortable_array);
-		                break;
-		            case SORT_DESC:
-		                arsort($sortable_array);
-		                break;
-		        }
-
-		        foreach ($sortable_array as $k => $v) {
-		            $new_array[$k] = $array[$k];
-		        }
-		    }
-
-		    return $new_array;
-		}
-
-		function GetEventTypes($appKey, $sessionToken) {
-			$jsonResponse = CallAPI($appKey, $sessionToken, 'listEventTypes', '{"filter":{}}');
-
-			return $jsonResponse;
-		}
-
-		function GetEvents($appKey, $sessionToken, $eventID) {
-			$params = '{"filter":{"eventTypeIds":["' . $eventID . '"],
-              "marketStartTime":{"from":"' . date('c') . '"}}}';
-			$jsonResponse = CallAPI($appKey, $sessionToken, 'listEvents', $params);
-
-			return $jsonResponse;
-		}
-
-		function ExtractEventTypeId($allEventTypes, $eventTypeName) {
-		    foreach ($allEventTypes as $eventType) {
-		        if ($eventType->eventType->name == $eventTypeName) {
-		            return $eventType->eventType->id;
-		        }
-		    }
-		}
-
-		function GetEventList($allEvents, $eventTypeID) {
-			$count = 0;
-			$events = [];
-			foreach ($allEvents as $count => $event) {
-				$events[$count] = array('time' => FormatTime($event->event->openDate), 'type' => $eventTypeID, 'name' => $event->event->name);
-				$count++;
-
-				if($count >= 50) {
-					break;
-				}
-			}
-
-			return $events;
-		}
-
-		function CallAPI($appKey, $sessionToken, $operation, $params) {
-		    $ch = curl_init();
-
-		    curl_setopt($ch, CURLOPT_URL, "https://api.betfair.com/exchange/betting/rest/v1/" . $operation . "/");
-		    curl_setopt($ch, CURLOPT_POST, 1);
-		    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER,false);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,false);
-		    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-		    	'Connection: keep-alive',
-		        'X-Application: ' . $appKey,
-		        'X-Authentication: ' . $sessionToken,
-		        'Accept: application/json',
-		        'Content-Type: application/json'
-		    ));
-
-		    curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-
-		    debug('Post Data: ' . $params);
-		    $response = json_decode(curl_exec($ch));
-		    debug('Response: ' . json_encode($response));
-
-		    $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		    curl_close($ch);
-
-		    if ($http_status == 200) {
-		        return $response;
-		    } else {
-		        echo 'Call to api-ng failed: ' . "\n";
-		        echo  'Response: ' . json_encode($response) . "\n";
-		        echo 'HTTP CODE: ' . $http_status;
-		        exit(-1);
-		    }
-		}
-
-		function debug($debugString) {
-		    global $DEBUG;
-		    if ($DEBUG)
-		        echo $debugString . "\n\n";
-		}
 	?>
 
 	<script>
@@ -181,7 +66,7 @@
 			events = <?php echo json_encode($orderedEvents); ?>;
 
 			for(var i = 0; i < events.length; i++) {
-				if(new Date(events[i].time).getTime() - new Date().getTime() <= 0) {
+				if(new Date(events[i].time).getTime() - new Date().getTime() <= 0 || new Date(events[i].time).getTime() - new Date().getTime() >=  (3 * 1000 * 60 * 60 * 24)){
 					events.splice(i, 1);
 					i--;
 				}
@@ -246,11 +131,11 @@
 				<h1 id="Type5"><?php echo $orderedEvents[4]['type']; ?></h1>
 			</div>
 			<div id="Names" class="Info">
-				<h1 id="Name1"><?php echo $orderedEvents[0]['name']; ?></h1>
-				<h1 id="Name2"><?php echo $orderedEvents[1]['name']; ?></h1>
-				<h1 id="Name3"><?php echo $orderedEvents[2]['name']; ?></h1>
-				<h1 id="Name4"><?php echo $orderedEvents[3]['name']; ?></h1>
-				<h1 id="Name5"><?php echo $orderedEvents[4]['name']; ?></h1>
+				<h1 id="Name1"><a href="eventDetails.php/?eventID=<?php echo  $orderedEvents[0]['id']; ?>" id="Link1"><?php echo $orderedEvents[0]['name']; ?></a></h1>
+				<h1 id="Name2"><a href="eventDetails.php/?eventID=<?php echo  $orderedEvents[1]['id']; ?>" id="Link1"><?php echo $orderedEvents[1]['name']; ?></a></h1>
+				<h1 id="Name3"><a href="eventDetails.php/?eventID=<?php echo  $orderedEvents[2]['id']; ?>" id="Link1"><?php echo $orderedEvents[2]['name']; ?></a></h1>
+				<h1 id="Name4"><a href="eventDetails.php/?eventID=<?php echo  $orderedEvents[3]['id']; ?>" id="Link1"><?php echo $orderedEvents[3]['name']; ?></a></h1>
+				<h1 id="Name5"><a href="eventDetails.php/?eventID=<?php echo  $orderedEvents[4]['id']; ?>" id="Link1"><?php echo $orderedEvents[4]['name']; ?></a></h1>
 			</div>
 		</div>
 	</div>
