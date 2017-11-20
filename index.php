@@ -10,14 +10,14 @@
 
 		$DEBUG = false;
 
-		$allEventTypes = GetEventTypes("4i5aIrwSTbg9Fo3h", "WcMwN+CwkZNTOF44gyjMhxVfvXs0caMM30jPE6PQIi8=");
+		$allEventTypes = GetEventTypes("4i5aIrwSTbg9Fo3h", "ACk9xStttAlzqa+u2aHZFXdoRgcfaNj8uqVAMk+HnDo=");
 		
 		
 		$horseRacingTypeID = ExtractEventTypeId($allEventTypes, "Horse Racing");
 		$greyhoundRacingTypeID = ExtractEventTypeId($allEventTypes, "Greyhound Racing");
 
-		$allHorseEvents = GetEvents("4i5aIrwSTbg9Fo3h", "WcMwN+CwkZNTOF44gyjMhxVfvXs0caMM30jPE6PQIi8=", $horseRacingTypeID);
-		$allGreyhoundEvents = GetEvents("4i5aIrwSTbg9Fo3h", "WcMwN+CwkZNTOF44gyjMhxVfvXs0caMM30jPE6PQIi8=", $greyhoundRacingTypeID);
+		$allHorseEvents = GetEvents("4i5aIrwSTbg9Fo3h", "ACk9xStttAlzqa+u2aHZFXdoRgcfaNj8uqVAMk+HnDo=", $horseRacingTypeID);
+		$allGreyhoundEvents = GetEvents("4i5aIrwSTbg9Fo3h", "ACk9xStttAlzqa+u2aHZFXdoRgcfaNj8uqVAMk+HnDo=", $greyhoundRacingTypeID);
 
 		$horseEvents = GetEventList($allHorseEvents, "Horse Racing");
 		$greyhoundEvents = GetEventList($allGreyhoundEvents, "Greyhound Racing");
@@ -25,7 +25,7 @@
 		$orderedEvents = [];
 
 
-		for($i = 0; $i < 10; $i++) {
+		for($i = 0; $i < 25; $i++) {
 			if(count($horseEvents) >= $i - 1) {
 				$orderedEvents[] = $horseEvents[$i];
 			}
@@ -121,7 +121,7 @@
 				$events[$count] = array('time' => FormatTime($event->event->openDate), 'type' => $eventTypeID, 'name' => $event->event->name);
 				$count++;
 
-				if($count >= 10) {
+				if($count >= 50) {
 					break;
 				}
 			}
@@ -171,14 +171,71 @@
 		}
 	?>
 
+	<script>
+		var events = <?php echo json_encode($orderedEvents); ?>;
+
+		TriggerCountdowns();
+
+		function TriggerCountdowns() {
+
+			events = <?php echo json_encode($orderedEvents); ?>;
+
+			for(var i = 0; i < events.length; i++) {
+				if(new Date(events[i].time).getTime() - new Date().getTime() <= 0) {
+					events.splice(i, 1);
+					i--;
+				}
+			}
+
+			SortByKey(events, 'time');
+
+			TriggerCountdown(1);
+			TriggerCountdown(2);
+			TriggerCountdown(3);
+			TriggerCountdown(4);
+			TriggerCountdown(5);
+		}
+
+		function SortByKey(array, key) {
+		    return array.sort(function(a, b) {
+		        var x = a[key]; var y = b[key];
+		        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+		    });
+		}
+
+		function TriggerCountdown(timeId) {
+			var countDownDate = new Date(events[timeId].time).getTime();
+
+			var x = setInterval(function() {
+
+			  var now = new Date().getTime();
+
+			  var distance = countDownDate - now;
+
+			  var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+			  var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+			  var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+			  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+			  document.getElementById("Time" + timeId).innerHTML = days + "d " + hours + "h "
+			  + minutes + "m " + seconds + "s ";
+
+			  if (distance < 0) {
+			    clearInterval(x);
+			    document.getElementById("Time" + timeId).innerHTML = "EVENT COMPLETE";
+			  }
+			}, 1000);
+		}
+	</script>
+
 	<div id="Container">
 		<div id="Content">
 			<div id="Times" class="Info">
-				<h1 id="Time1"><?php echo $orderedEvents[0]['time']; ?></h1>
-				<h1 id="Time2"><?php echo $orderedEvents[1]['time']; ?></h1>
-				<h1 id="Time3"><?php echo $orderedEvents[2]['time']; ?></h1>
-				<h1 id="Time4"><?php echo $orderedEvents[3]['time']; ?></h1>
-				<h1 id="Time5"><?php echo $orderedEvents[4]['time']; ?></h1>
+				<h1 id="Time1"><script type="text/javascript">document.write(events.length);</script></h1>
+				<h1 id="Time2"></h1>
+				<h1 id="Time3"></h1>
+				<h1 id="Time4"></h1>
+				<h1 id="Time5"></h1>
 			</div>
 			<div id="Types" class="Info">
 				<h1 id="Type1"><?php echo $orderedEvents[0]['type']; ?></h1>
@@ -196,48 +253,5 @@
 			</div>
 		</div>
 	</div>
-
-	<script>
-		TriggerCountdowns();
-
-		function TriggerCountdowns() {
-			TriggerCountdown(1);
-			TriggerCountdown(2);
-			TriggerCountdown(3);
-			TriggerCountdown(4);
-			TriggerCountdown(5);
-		}
-
-		function TriggerCountdown(timeId) {
-			// Set the date we're counting down to
-			var countDownDate = new Date(document.getElementById("Time" + timeId).innerHTML).getTime();
-
-			// Update the count down every 1 second
-			var x = setInterval(function() {
-
-			  // Get todays date and time
-			  var now = new Date().getTime();
-
-			  // Find the distance between now an the count down date
-			  var distance = countDownDate - now;
-
-			  // Time calculations for days, hours, minutes and seconds
-			  var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-			  var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-			  var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-			  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-			  // Display the result in the element with id="demo"
-			  document.getElementById("Time" + timeId).innerHTML = days + "d " + hours + "h "
-			  + minutes + "m " + seconds + "s ";
-
-			  // If the count down is finished, write some text 
-			  if (distance < 0) {
-			    clearInterval(x);
-			    document.getElementById("Time" + timeId).innerHTML = "EVENT COMPLETE";
-			  }
-			}, 1000);
-		}
-	</script>
 </body>
 </html>
