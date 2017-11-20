@@ -223,6 +223,7 @@
 			  if (distance < 0) {
 			    clearInterval(x);
 			    document.getElementById("Time" + timeId).innerHTML = "EVENT COMPLETE";
+			    TriggerCountdowns();
 			  }
 			}, 1000);
 		}
@@ -231,7 +232,7 @@
 	<div id="Container">
 		<div id="Content">
 			<div id="Times" class="Info">
-				<h1 id="Time1"><script type="text/javascript">document.write(events.length);</script></h1>
+				<h1 id="Time1"></h1>
 				<h1 id="Time2"></h1>
 				<h1 id="Time3"></h1>
 				<h1 id="Time4"></h1>
